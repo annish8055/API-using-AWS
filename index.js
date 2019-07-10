@@ -33,7 +33,6 @@ exports.handler = function(event, context, callback) {
                 "#phone_number": "phone_number",
               },
               ExpressionAttributeValues: { ":phone_number_val": param.phone },
-              Limit: 1,
               ScanIndexForward: false
             };
             console.log(params);
@@ -42,7 +41,22 @@ exports.handler = function(event, context, callback) {
                 response.body = JSON.stringify(err);
               }
               else {
-                response.body = JSON.stringify(data.Items);
+                if(data.Items.length > 1){
+                var max ="";
+                var temp = "";
+                var fin = 0;
+                for(var i=0;i<data.Items.length-2;i++ ){
+                  max = new Date(data.Items[i].time_stamp);
+                  temp = new Date(data.Items[i+1].time_stamp);
+                  if(max < temp){
+                    max = temp;
+                    fin = i+1;
+                  }
+                }
+                response.body = JSON.stringify(data.Items[fin]);
+                }else{
+                  response.body = JSON.stringify(data.Items);
+                }
               }
               callback(null, response);
             });
@@ -82,7 +96,7 @@ exports.handler = function(event, context, callback) {
         console.log(param.phone);
         console.log(param.chat_id);
         console.log(param.conversation);
-        if(param.phone == null || param.chat_id == null || param.conversation == null) {
+        if(param.phone == null || param.chat_id == null || param.conversation == null || param.phone == "" || param.chat_id == "" || param.conversation == "") {
           response.statusCode = 400;
           response.body = JSON.stringify('Phone number or the chat id or converstion is missing from the request body');
           callback(null, response);
